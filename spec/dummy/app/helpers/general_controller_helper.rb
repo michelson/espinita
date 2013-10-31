@@ -1,0 +1,2 @@
+module GeneralControllerHelper
+end
