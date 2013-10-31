@@ -1,4 +1,8 @@
-# Espinita
+# Espinita 
+
+[![Build Status](https://secure.travis-ci.org/continuum/espinita.png)](http://travis-ci.org/continuum/espinita) [![Dependency Status](https://gemnasium.com/continuum/espinita.png)](https://gemnasium.com/continuum/espinita)
+=======
+
 ## Audits activerecord models like a boss
 
 ![Alt text](./espinita.jpg)
