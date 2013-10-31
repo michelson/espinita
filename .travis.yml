@@ -4,7 +4,6 @@ script: bundle exec rake
 
 rvm:
   - 2.0.0
-  - 1.9.2
   - 1.9.3
 gemfile:
   - Gemfile
