@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.version     = Espinita::VERSION
   s.authors     = ["Miguel Michelson"]
   s.email       = ["miguelmichelson@gmail.com"]
-  s.homepage    = "TODO"
+  s.homepage    = "http://github.com/continuum/espinita"
   s.summary     = "Auditable Rails Engine."
   s.description = "Audit activerecord models like a boss"
 
