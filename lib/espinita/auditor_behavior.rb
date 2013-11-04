@@ -34,6 +34,10 @@ module Espinita
           self.excluded_cols = (@@default_excluded) + options[:except]
         end
 
+        has_many :audits, :as => :auditable, :class_name => Espinita::Audit.name
+        #attr_accessor :audited_user, :audited_ip
+        accepts_nested_attributes_for :audits
+
       end
 
       def permited_columns

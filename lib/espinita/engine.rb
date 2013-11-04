@@ -11,6 +11,7 @@ module Espinita
 
     initializer "include Auditor request into action controller" do |app|
       ActionController::Base.send(:include, Espinita::AuditorRequest)
+      ActiveRecord::Base.send(:include, Espinita::Auditor)
     end
 
 
