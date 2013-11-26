@@ -9,3 +9,4 @@ spec/dummy/.sass-cache
 
 # Gemnasium gem configuration file
 config/gemnasium.yml
+coverage/
