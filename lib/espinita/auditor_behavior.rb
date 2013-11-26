@@ -63,13 +63,11 @@ module Espinita
 
 
     def audit_create
-      puts self.class.audit_callbacks
       write_audit(:action => 'create', :audited_changes => changes,
                   :comment => audit_comment)
     end
 
     def audit_update
-      puts self.class.audit_callbacks
       write_audit(:action => 'update', :audited_changes => changes,
                     :comment => audit_comment)
     end
