@@ -157,33 +157,31 @@ describe GeneralModel do
     end
   end
 
-  describe 'create' do
-    let(:general_model) { FactoryGirl.build :general_model }
-    before { general_model.class.auditable }
-    before { general_model.save }
-
+  describe 'audit actions' do
     subject { Espinita::Audit.last }
+    before { general_model.class.auditable only: [:name]}
 
-    its(:action) { should eq 'create' }
-  end
+    describe '.audit_create' do
+      let(:general_model) { FactoryGirl.build :general_model }
+      before { general_model.save }
 
-  describe 'update' do
-    let(:general_model) { FactoryGirl.create :general_model }
-    before { general_model.class.auditable }
-    before { general_model.update_attributes name: 'Foo' }
+      its(:action) { should eq 'create' }
+    end
 
-    subject { Espinita::Audit.last }
+    describe '.audit_update' do
+      let(:general_model) { FactoryGirl.create :general_model }
+      let(:old_name) { general_model.name }
+      before { general_model.update_attributes name: 'Foo' }
 
-    its(:action) { should eq 'update' }
-  end
+      its(:action) { should eq 'update' }
+    end
 
-  describe 'destroy' do
-    let(:general_model) { FactoryGirl.create :general_model }
-    before { general_model.class.auditable }
-    before { general_model.destroy }
+    describe '.audit_destroy' do
+      let(:general_model) { FactoryGirl.create :general_model }
+      before { general_model.destroy }
 
-    subject { Espinita::Audit.last }
-
-    its(:action) { should eq 'destroy' }
+      its(:action) { should eq 'destroy' }
+      its(:audited_changes) { should eq({'name' => general_model.name}) }
+    end
   end
 end
