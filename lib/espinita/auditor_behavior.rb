@@ -56,32 +56,31 @@ module Espinita
 
     end
 
-    # audited attributes detected against permited columns
-    def audited_attributes
+    def audited_columns
       self.changes.keys & self.class.permited_columns
     end
 
+    def audited_attributes
+      self.attributes.delete_if { |key, _| !self.class.permited_columns.include? key }
+    end
 
     def audit_create
-      puts self.class.audit_callbacks
       write_audit(:action => 'create', :audited_changes => changes,
                   :comment => audit_comment)
     end
 
     def audit_update
-      puts self.class.audit_callbacks
       write_audit(:action => 'update', :audited_changes => changes,
                     :comment => audit_comment)
     end
 
     def audit_destroy
-      write_audit(:action => 'destroy', :audited_changes => changes,
+      write_audit(:action => 'destroy', :audited_changes => audited_attributes,
                   :comment => audit_comment)
     end
 
     def write_audit(options)
-      self.audits.create(options) unless audited_attributes.blank?
+      self.audits.create(options) if options[:action] == 'destroy' || !audited_columns.blank?
     end
-
   end
 end
