@@ -78,8 +78,7 @@ module Espinita
     end
 
     def write_audit(options)
-      self.audits.create(options) unless audited_attributes.blank?
+      self.audits.create(options) if options[:action] == 'destroy' || !audited_attributes.blank?
     end
-
   end
 end

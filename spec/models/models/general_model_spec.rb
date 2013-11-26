@@ -66,7 +66,7 @@ describe GeneralModel do
   end
 
   describe "update with audit comment" do
-    
+
     let(:general_model) do
       FactoryGirl.create(:general_model)
     end
@@ -92,7 +92,7 @@ describe GeneralModel do
 
   describe "save with current user" do
 
-    before :each do 
+    before :each do
       RequestStore.store[:audited_user] = current_user
     end
 
@@ -114,11 +114,11 @@ describe GeneralModel do
   end
 
   describe "audit only on create" do
-    
+
     let(:general_model) do
       [:create, :update, :destroy].each do |c|
-         GeneralModel.reset_callbacks(c)
-       end
+        GeneralModel.reset_callbacks(c)
+      end
       GeneralModel.auditable on: [:create]
       FactoryGirl.create(:general_model)
     end
@@ -139,8 +139,8 @@ describe GeneralModel do
 
     let(:general_model) do
       [:create, :update, :destroy].each do |c|
-         GeneralModel.reset_callbacks(c)
-       end
+        GeneralModel.reset_callbacks(c)
+      end
       GeneralModel.auditable on: [:update]
       FactoryGirl.create(:general_model)
     end
@@ -157,4 +157,33 @@ describe GeneralModel do
     end
   end
 
+  describe 'create' do
+    let(:general_model) { FactoryGirl.build :general_model }
+    before { general_model.class.auditable }
+    before { general_model.save }
+
+    subject { Espinita::Audit.last }
+
+    its(:action) { should eq 'create' }
+  end
+
+  describe 'update' do
+    let(:general_model) { FactoryGirl.create :general_model }
+    before { general_model.class.auditable }
+    before { general_model.update_attributes name: 'Foo' }
+
+    subject { Espinita::Audit.last }
+
+    its(:action) { should eq 'update' }
+  end
+
+  describe 'destroy' do
+    let(:general_model) { FactoryGirl.create :general_model }
+    before { general_model.class.auditable }
+    before { general_model.destroy }
+
+    subject { Espinita::Audit.last }
+
+    its(:action) { should eq 'destroy' }
+  end
 end
