@@ -12,7 +12,7 @@ Gem::Specification.new do |s|
   s.homepage    = "http://github.com/continuum/espinita"
   s.summary     = "Auditable Rails Engine."
   s.description = "Audit activerecord models like a boss"
-
+  s.license     = 'MIT'
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
   s.test_files = Dir["spec/**/*"]
 
