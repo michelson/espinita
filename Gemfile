@@ -11,6 +11,6 @@ gemspec
 # your gem to rubygems.org.
 
 # To use debugger
-# gem 'debugger'
+gem 'debugger'
 
 gem 'coveralls', require: false

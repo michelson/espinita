@@ -15,9 +15,7 @@ This project is heavily based in audited gem.
 
 In your gemfile
 
-```ruby
-gem "espinita"
-```
+    gem "espinita"
 
 In console
 
@@ -26,57 +24,36 @@ In console
 
 ## Usage
 
-```ruby
-class Post < ActiveRecord::Base
-  auditable
-end
+    class Post < ActiveRecord::Base
+      auditable
+    end
 
-@post.create(title: "an awesome blog post" )
-```
+    @post.create(title: "an awesome blog post" )
 
 Espinita will create an audit by default on creation , edition and destroy:
 
-```ruby
-@post.audits.size
-=> 1
-```
+    @post.audits.size #=> 1
 
-Espinita provides options to include or exclude columns to trigger the creation
-of audit.
+Espinita provides options to include or exclude columns to trigger the creation of audit.
 
-```ruby
-class Post < ActiveRecord::Base
-  auditable only: [:title] # except: [:some_column]
-end
-```
+    class Post < ActiveRecord::Base
+      auditable only: [:title] # except: [:some_column]
+    end
 
 And lets you declare the callbacks you want for audit creation:
 
-```ruby
-class Post < ActiveRecord::Base
-  auditable on: [:create]  # on: [:create, :update]
-end
-```
+    class Post < ActiveRecord::Base
+      auditable on: [:create]  # on: [:create, :update]
+    end
 
 You can find the audits records easily:
 
-```ruby
-@post.audits.first
-=>  #<Espinita::Audit id: 1, auditable_id: 1, auditable_type: "Post", user_id: 1, user_type: "User", audited_changes: {"title"=>[nil, "MyString"], "created_at"=>[nil, 2013-10-30 15:50:14 UTC], "updated_at"=>[nil, 2013-10-30 15:50:14 UTC], "id"=>[nil, 1]}
-```
+    @post.audits.first #=>  #<Espinita::Audit id: 1, auditable_id: 1, auditable_type: "Post", user_id: 1, user_type: "User", audited_changes: {"title"=>[nil, "MyString"], "created_at"=>[nil, 2013-10-30 15:50:14 UTC], "updated_at"=>[nil, 2013-10-30 15:50:14 UTC], "id"=>[nil, 1]}
 
-Espinita will save the model changes in a serialized column called
-`audited_changes`:
+Espinita will save the model changes in a serialized column called audited_changes:
 
-```ruby
-@post.audits.first.audited_changed
-=> {"title"=>[nil, "MyString"], "created_at"=>[nil, 2013-10-30 15:50:14 UTC], "updated_at"=>[nil, 2013-10-30 15:50:14 UTC], "id"=>[nil, 1]}
-```
+    @post.audits.firt.audited_changed #=> {"title"=>[nil, "MyString"], "created_at"=>[nil, 2013-10-30 15:50:14 UTC], "updated_at"=>[nil, 2013-10-30 15:50:14 UTC], "id"=>[nil, 1]}
 
-Espinita will detect the current user when records saved from rails
-controllers.  By default Espinita uses the `current_user` method but you can
-change it:
+Espinita will detect the current user when records saved from rails controllers. By default Espinita uses current_user method but you can change it:
 
-```ruby
-Espinita.current_user_method = :authenticated_user
-```
+    Espinita.current_user_method = :authenticated_user

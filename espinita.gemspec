@@ -12,11 +12,11 @@ Gem::Specification.new do |s|
   s.homepage    = "http://github.com/continuum/espinita"
   s.summary     = "Auditable Rails Engine."
   s.description = "Audit activerecord models like a boss"
-  s.license     = 'MIT'
+
   s.files = Dir["{app,config,db,lib}/**/*", "MIT-LICENSE", "Rakefile", "README.md"]
   s.test_files = Dir["spec/**/*"]
 
-  s.add_dependency "rails", "~> 4.0.0"
+  s.add_dependency "rails", "~> 4.0.1.rc3"
   s.add_dependency "request_store"
 
   s.add_development_dependency "sqlite3"

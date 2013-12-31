@@ -43,12 +43,20 @@ describe GeneralModel do
       general_model
     end
 
+    let(:excluded_cols){
+      updated_model.class.excluded_cols & updated_model.audits.last.audited_changes.keys.map(&:to_s)
+    }
+
+    it "auditable should not save exluded cols in changes" do
+      expect(excluded_cols).to be_empty
+    end
+
     it "model should be associated" do
       expect(updated_model.audits).to have(2).audits
     end
   end
 
-  describe "update model with only name key" do
+  describe "update model with exclusion key" do
 
     let(:general_model) do
       FactoryGirl.create(:general_model)
@@ -60,13 +68,23 @@ describe GeneralModel do
       general_model
     end
 
-    it "model should be associated" do
+    let(:excluded_cols){
+      updated_model.class.excluded_cols & updated_model.audits.last.audited_changes.keys.map(&:to_s)
+    }
+
+    it "auditable should not save exluded cols in changes" do
+      
+      expect(excluded_cols).to_not be_empty
+    end
+
+    it "model should be associated and not include name in audited_changes" do
       expect(updated_model.audits).to have(1).audits
+      expect(updated_model.audits.first.audited_changes.keys).to_not include("name")
     end
   end
 
   describe "update with audit comment" do
-
+    
     let(:general_model) do
       FactoryGirl.create(:general_model)
     end
@@ -92,7 +110,7 @@ describe GeneralModel do
 
   describe "save with current user" do
 
-    before :each do
+    before :each do 
       RequestStore.store[:audited_user] = current_user
     end
 
@@ -113,12 +131,32 @@ describe GeneralModel do
     end
   end
 
-  describe "audit only on create" do
-
+  describe "audit defaults excepts" do
     let(:general_model) do
       [:create, :update, :destroy].each do |c|
-        GeneralModel.reset_callbacks(c)
-      end
+         GeneralModel.reset_callbacks(c)
+       end
+      GeneralModel.auditable on: [:update]
+      FactoryGirl.create(:general_model)
+    end
+
+    let(:updated_model) do
+      general_model.update_attributes(updated_at: 1.day.from_now )
+      general_model
+    end
+
+    it "should have 1 audit" do
+      expect(updated_model).to have(0).audits
+    end
+
+  end
+
+  describe "audit only on create" do
+    
+    let(:general_model) do
+      [:create, :update, :destroy].each do |c|
+         GeneralModel.reset_callbacks(c)
+       end
       GeneralModel.auditable on: [:create]
       FactoryGirl.create(:general_model)
     end
@@ -139,8 +177,8 @@ describe GeneralModel do
 
     let(:general_model) do
       [:create, :update, :destroy].each do |c|
-        GeneralModel.reset_callbacks(c)
-      end
+         GeneralModel.reset_callbacks(c)
+       end
       GeneralModel.auditable on: [:update]
       FactoryGirl.create(:general_model)
     end
@@ -157,31 +195,4 @@ describe GeneralModel do
     end
   end
 
-  describe 'audit actions' do
-    subject { Espinita::Audit.last }
-    before { general_model.class.auditable only: [:name]}
-
-    describe '.audit_create' do
-      let(:general_model) { FactoryGirl.build :general_model }
-      before { general_model.save }
-
-      its(:action) { should eq 'create' }
-    end
-
-    describe '.audit_update' do
-      let(:general_model) { FactoryGirl.create :general_model }
-      let(:old_name) { general_model.name }
-      before { general_model.update_attributes name: 'Foo' }
-
-      its(:action) { should eq 'update' }
-    end
-
-    describe '.audit_destroy' do
-      let(:general_model) { FactoryGirl.create :general_model }
-      before { general_model.destroy }
-
-      its(:action) { should eq 'destroy' }
-      its(:audited_changes) { should eq({'name' => general_model.name}) }
-    end
-  end
 end
