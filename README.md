@@ -52,7 +52,7 @@ You can find the audits records easily:
 
 Espinita will save the model changes in a serialized column called audited_changes:
 
-    @post.audits.firt.audited_changed #=> {"title"=>[nil, "MyString"], "created_at"=>[nil, 2013-10-30 15:50:14 UTC], "updated_at"=>[nil, 2013-10-30 15:50:14 UTC], "id"=>[nil, 1]}
+    @post.audits.firt.audited_changes #=> {"title"=>[nil, "MyString"], "created_at"=>[nil, 2013-10-30 15:50:14 UTC], "updated_at"=>[nil, 2013-10-30 15:50:14 UTC], "id"=>[nil, 1]}
 
 Espinita will detect the current user when records saved from rails controllers. By default Espinita uses current_user method but you can change it:
 
