@@ -1,6 +1,6 @@
 # Espinita
 
-[![Build Status](https://secure.travis-ci.org/continuum/espinita.png)](http://travis-ci.org/continuum/espinita) [![Dependency Status](https://gemnasium.com/continuum/espinita.png)](https://gemnasium.com/continuum/espinita) [![Coverage Status](https://coveralls.io/repos/continuum/espinita/badge.png?branch=master)](https://coveralls.io/r/continuum/espinita?branch=master)[![Code Climate](https://codeclimate.com/github/continuum/espinita.png)](https://codeclimate.com/github/continuum/espinita)
+[![Build Status](https://secure.travis-ci.org/continuum/espinita.png)](http://travis-ci.org/continuum/espinita) [![Dependency Status](https://gemnasium.com/continuum/espinita.png)](https://gemnasium.com/continuum/espinita) [![Coverage Status](https://coveralls.io/repos/continuum/espinita/badge.png?branch=master)](https://coveralls.io/r/continuum/espinita?branch=master) [![Code Climate](https://codeclimate.com/github/continuum/espinita.png)](https://codeclimate.com/github/continuum/espinita)
 =======
 
 ## Audits activerecord models like a boss
