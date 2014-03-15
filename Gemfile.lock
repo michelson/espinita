@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    espinita (0.0.5)
+    espinita (0.0.6)
       rails (>= 4.0)
       request_store
 
