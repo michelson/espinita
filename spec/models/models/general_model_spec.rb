@@ -54,6 +54,8 @@ describe GeneralModel do
     it "model should be associated" do
       expect(updated_model.audits).to have(2).audits
     end
+
+
   end
 
   describe "update model with exclusion key" do
@@ -80,6 +82,12 @@ describe GeneralModel do
     it "model should be associated and not include name in audited_changes" do
       expect(updated_model.audits).to have(1).audits
       expect(updated_model.audits.first.audited_changes.keys).to_not include("name")
+    end
+
+    it "model should have an array of 2 values on audited changes " do 
+      updated_model.audits.last.audited_changes.keys.each do |key|
+        expect(updated_model.audits.last.audited_changes[key.to_sym].size).to eql(2)
+      end
     end
   end
 

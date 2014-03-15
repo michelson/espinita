@@ -62,7 +62,7 @@ module Espinita
     end
 
     def audited_hash
-      Hash[ audited_attributes.map{|o| [o.to_sym, self.send(o.to_sym)] } ]
+      Hash[ audited_attributes.map{|o| [o.to_sym, self.changes[o.to_sym] ] } ]
     end
 
 
