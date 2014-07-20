@@ -6,7 +6,9 @@ module Espinita::AuditorRequest
   end
 
   def store_audited_user
-    RequestStore.store[:audited_user] = self.send(Espinita.current_user_method) #current_user
+
+    # assign current_user if defined
+    RequestStore.store[:audited_user] = self.send(Espinita.current_user_method) if self.respond_to?(Espinita.current_user_method, include_private = true)
     
     RequestStore.store[:audited_ip]   = self.try(:request).try(:remote_ip)
   end
