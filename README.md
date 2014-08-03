@@ -17,7 +17,7 @@ In your gemfile
 
 ```ruby
 gem "espinita"
-``
+```
 
 In console
 ```ruby
