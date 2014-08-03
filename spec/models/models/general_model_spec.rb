@@ -54,8 +54,6 @@ describe GeneralModel do
     it "model should be associated" do
       expect(updated_model.audits).to have(2).audits
     end
-
-
   end
 
   describe "update model with exclusion key" do
@@ -75,7 +73,7 @@ describe GeneralModel do
     }
 
     it "auditable should not save exluded cols in changes" do
-      
+
       expect(excluded_cols).to_not be_empty
     end
 
@@ -84,7 +82,7 @@ describe GeneralModel do
       expect(updated_model.audits.first.audited_changes.keys).to_not include("name")
     end
 
-    it "model should have an array of 2 values on audited changes " do 
+    it "model should have an array of 2 values on audited changes " do
       updated_model.audits.last.audited_changes.keys.each do |key|
         expect(updated_model.audits.last.audited_changes[key.to_sym].size).to eql(2)
       end
@@ -92,7 +90,7 @@ describe GeneralModel do
   end
 
   describe "update with audit comment" do
-    
+
     let(:general_model) do
       FactoryGirl.create(:general_model)
     end
@@ -118,7 +116,7 @@ describe GeneralModel do
 
   describe "save with current user" do
 
-    before :each do 
+    before :each do
       RequestStore.store[:audited_user] = current_user
     end
 
@@ -156,11 +154,10 @@ describe GeneralModel do
     it "should have 1 audit" do
       expect(updated_model).to have(0).audits
     end
-
   end
 
   describe "audit only on create" do
-    
+
     let(:general_model) do
       [:create, :update, :destroy].each do |c|
          GeneralModel.reset_callbacks(c)
@@ -200,6 +197,23 @@ describe GeneralModel do
       expect(updated_model).to have(1).audits
       expect(updated_model.audits.last.version).to_not be_blank
       expect(updated_model.audits.last.version).to eql 1
+    end
+  end
+
+  describe "audit when delete model" do
+    let(:model) do
+      [:create, :update, :destroy].each do |c|
+         GeneralModel.reset_callbacks(c)
+       end
+      GeneralModel.auditable on: [:destroy]
+      FactoryGirl.create(:general_model)
+    end
+
+    it "should create 1 audit when destroy" do
+      expect(model).to have(0).audits
+      model.destroy
+      expect(model).to have(1).audits
+      expect(model.audits.last.comment).to include("deleted model #{model.id}")
     end
   end
 

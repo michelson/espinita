@@ -17,9 +17,9 @@ class AuditsController < ActionController::Base
 end
 
 
-describe AuditsController do
+describe AuditsController, :type => :controller do
 
-  before :each do 
+  before :each do
     GeneralModel.auditable
   end
 
@@ -32,7 +32,7 @@ describe AuditsController do
   describe "POST audit" do
 
     it "should audit user" do
-      
+
       # add current user accessor to controller
       AuditsController.send(:define_method, 'current_user=') {|user| self.instance_variable_set("@current_user", user)}
       AuditsController.send(:define_method, 'current_user') {self.instance_variable_get("@current_user")}
@@ -42,18 +42,18 @@ describe AuditsController do
         post :audit
       }.to change( Espinita::Audit, :count )
 
-      assigns(:general_model).audits.last.user.should == user
-      assigns(:general_model).audits.last.remote_address.should == "0.0.0.0"
+      expect(assigns(:general_model).audits.last.user).to be == user
+      expect(assigns(:general_model).audits.last.remote_address).to be == "0.0.0.0"
 
     end
-    
+
     it "should audit without current_user defined" do
       expect {
         post :audit
       }.to change( Espinita::Audit, :count )
 
-      assigns(:general_model).audits.last.user.should == nil
-      assigns(:general_model).audits.last.remote_address.should == "0.0.0.0"
+      expect(assigns(:general_model).audits.last.user).to be == nil
+      expect(assigns(:general_model).audits.last.remote_address).to be == "0.0.0.0"
 
     end
   end

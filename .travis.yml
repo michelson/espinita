@@ -6,4 +6,5 @@ rvm:
   - 2.0.0
   - 1.9.3
 gemfile:
-  - Gemfile
+  - gemfiles/4.0.gemfile
+  - gemfiles/4.1.gemfile

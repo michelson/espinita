@@ -2,7 +2,7 @@ module Espinita
   module AuditorBehavior
     extend ActiveSupport::Concern
 
-    included do 
+    included do
       class_attribute  :excluded_cols
       class_attribute  :audit_callbacks
       attr_accessor :audit_comment
@@ -21,12 +21,12 @@ module Espinita
         after_create   :audit_create  if self.audit_callbacks.blank? || self.audit_callbacks.include?(:create)
         before_update  :audit_update  if self.audit_callbacks.blank? || self.audit_callbacks.include?(:update)
         before_destroy :audit_destroy if self.audit_callbacks.blank? || self.audit_callbacks.include?(:destroy)
-          
+
         self.excluded_cols   = (@@default_excluded)
 
         if options[:only]
           options[:only] = [options[:only]].flatten.map { |x| x.to_s }
-          self.excluded_cols = (self.column_names - options[:only] ) 
+          self.excluded_cols = (self.column_names - options[:only] )
         end
 
         if options[:except]
@@ -68,26 +68,27 @@ module Espinita
 
     def audit_create
       #puts self.class.audit_callbacks
-      write_audit(:action => 'create', 
+      write_audit(:action => 'create',
                   :audited_changes => audited_hash,
                   :comment => audit_comment)
     end
 
     def audit_update
       #puts self.class.audit_callbacks
-      write_audit(:action => 'update', 
+      write_audit(:action => 'update',
                   :audited_changes => audited_hash,
                   :comment => audit_comment)
     end
 
     def audit_destroy
-      write_audit(:action => 'destroy', 
-                  :audited_changes => audited_hash,
-                  :comment => audit_comment)
+      comment_description = ["deleted model #{id}", audit_comment].join(": ")
+      write_audit(:action => 'destroy',
+                  :audited_changes => self.attributes,
+                  :comment => comment_description )
     end
 
     def write_audit(options)
-      self.audits.create(options) unless audited_hash.blank?
+      self.audits.create(options) unless options[:audited_changes].blank?
     end
 
   end

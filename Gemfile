@@ -13,5 +13,5 @@ gemspec
 # To use debugger
 #gem 'debugger'
 gem "pry"
-
 gem 'coveralls', require: false
+gem "appraisal"
