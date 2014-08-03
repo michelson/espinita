@@ -9,7 +9,7 @@ require 'rspec/core/rake_task'
 Bundler::GemHelper.install_tasks
 
 desc 'Default: run unit tests.'
-task :default => [:clean, :all]
+task :default => [:all]
 
 desc 'Test the plugin under all supported Rails versions.'
 task :all => ["appraisal:cleanup", "appraisal:install"] do
