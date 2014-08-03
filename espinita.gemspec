@@ -20,10 +20,12 @@ Gem::Specification.new do |s|
   s.add_dependency "request_store"
 
   s.add_development_dependency "sqlite3"
-  s.add_development_dependency "rspec-rails"
+  s.add_development_dependency "rspec-rails", "~>3.0"
   s.add_development_dependency "factory_girl"
   s.add_development_dependency 'factory_girl_rails'
-  s.add_development_dependency "shoulda-matchers", "~>1.0"#, "~> 3.0"
+  #s.add_development_dependency "shoulda-matchers", "~>1.0"#, "~> 3.0"
+  s.add_development_dependency "rspec-collection_matchers"
+  s.add_development_dependency "shoulda", "3.5.0"
   s.add_development_dependency "database_cleaner"
   s.add_development_dependency "capybara"
 end
