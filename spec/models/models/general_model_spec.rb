@@ -20,14 +20,14 @@ describe GeneralModel do
 
     it "general auditable only method" do
       general_model.auditable only: [:name]
-      expect(general_model.permited_columns).to include("name")
-      expect(general_model.permited_columns.size).to eql 1
+      expect(general_model.permitted_columns).to include("name")
+      expect(general_model.permitted_columns.size).to eql 1
     end
 
     it "general auditable except method" do
       general_model.auditable except: [:name]
       expect(general_model.excluded_cols).to include("name")
-      expect(general_model.permited_columns).not_to include("name")
+      expect(general_model.permitted_columns).not_to include("name")
     end
   end
 

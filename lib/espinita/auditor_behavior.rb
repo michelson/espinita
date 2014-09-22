@@ -40,7 +40,7 @@ module Espinita
 
       end
 
-      def permited_columns
+      def permitted_columns
         self.column_names - self.excluded_cols.to_a
       end
 
@@ -56,9 +56,9 @@ module Espinita
 
     end
 
-    # audited attributes detected against permited columns
+    # audited attributes detected against permitted columns
     def audited_attributes
-      self.changes.keys & self.class.permited_columns
+      self.changes.keys & self.class.permitted_columns
     end
 
     def audited_hash
