@@ -3,9 +3,9 @@ language: ruby
 script: bundle exec rake
 
 rvm:
-  - 2.1.2
-  - 2.0.0
-  - 1.9.3
+  - 2.1
+  - 2.0
+  - 1.9
 gemfile:
   - gemfiles/4.0.gemfile
   - gemfiles/4.1.gemfile
