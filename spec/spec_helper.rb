@@ -6,6 +6,7 @@ ENV["RAILS_ENV"] ||= 'test'
 require File.expand_path("../../spec/dummy/config/environment", __FILE__)
 require 'rspec/rails'
 require 'rspec/autorun'
+require 'rspec/collection_matchers'
 
 require "factory_girl_rails"
 require "database_cleaner"
