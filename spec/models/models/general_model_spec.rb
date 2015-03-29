@@ -217,4 +217,33 @@ describe GeneralModel do
     end
   end
 
+  describe "history_from_audits_for" do
+    let(:general_model) do
+      [:create, :update, :destroy].each do |c|
+         GeneralModel.reset_callbacks(c)
+       end
+      GeneralModel.auditable on: [:update]
+      FactoryGirl.create(:general_model)
+    end
+
+    let(:updated_model) do
+      general_model.update_attributes(name: "Foo", audit_comment: "Some comment" )
+      general_model
+    end
+
+    it "should return history for a single column" do
+      expect(updated_model.history_from_audits_for(:name)).to match_array([["Foo", "2015/03/29"]])
+      updated_model.update_attributes(name: "Baz", audit_comment: "Some comment" )
+      expect(updated_model.history_from_audits_for(:name)).to match_array([["Foo", "2015/03/29"], ["Baz", "2015/03/29"]])
+    end
+
+    it "should raise an error if the requested column does not exist" do
+      expect{updated_model.history_from_audits_for(:waffles)}.to raise_error(ArgumentError)
+    end
+
+    it "should raise an error if passed an invalid argument" do
+      expect{updated_model.history_from_audits_for([:name, :settings])}.to raise_error(ArgumentError)
+    end
+  end
+
 end

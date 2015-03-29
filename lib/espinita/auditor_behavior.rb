@@ -56,6 +56,16 @@ module Espinita
 
     end
 
+    def history_from_audits_for(property)
+      raise ArgumentError, "Invalid argument. Please pass only a single column name." unless (property.is_a?(String) || property.is_a?(Symbol))
+      raise ArgumentError, "The specified column does not exist or is not audited." unless self.class.permitted_columns.include?(property.to_s)
+
+      audits = self.audits.select{ |a| a.audited_changes[property].present? }
+
+      history = audits.map{ |a| [a.audited_changes[property].last, a.created_at.strftime('%Y/%m/%d')] }
+      return history
+    end
+
     # audited attributes detected against permitted columns
     def audited_attributes
       self.changes.keys & self.class.permitted_columns
