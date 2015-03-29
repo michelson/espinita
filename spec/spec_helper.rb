@@ -13,6 +13,7 @@ require "database_cleaner"
 require 'capybara'
 require 'capybara/rspec'
 require 'shoulda/matchers/integrations/rspec'
+require 'timecop'
 
 require "espinita"
 require 'support/schema'

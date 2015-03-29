@@ -218,6 +218,14 @@ describe GeneralModel do
   end
 
   describe "history_from_audits_for" do
+    before do
+      Timecop.freeze(Time.now.localtime)
+    end
+
+    after do
+      Timecop.return
+    end
+
     let(:general_model) do
       [:create, :update, :destroy].each do |c|
          GeneralModel.reset_callbacks(c)
@@ -232,9 +240,25 @@ describe GeneralModel do
     end
 
     it "should return history for a single column" do
-      expect(updated_model.history_from_audits_for(:name)).to match_array([["Foo", "2015/03/29"]])
-      updated_model.update_attributes(name: "Baz", audit_comment: "Some comment" )
-      expect(updated_model.history_from_audits_for(:name)).to match_array([["Foo", "2015/03/29"], ["Baz", "2015/03/29"]])
+      later = Time.now.localtime + 10.days
+      even_later = Time.now.localtime + 1.year
+
+      expect(updated_model.history_from_audits_for(:name)).to eq([
+        {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')}
+      ])
+      Timecop.freeze(later) do
+        updated_model.update_attributes(name: "Baz", audit_comment: "Some comment" )
+      end
+      Timecop.freeze(even_later) do
+        updated_model.update_attributes(name: "Arglebargle", audit_comment: "Some comment" )
+      end
+      expect(updated_model.history_from_audits_for(:name)).to eq(
+        [
+          {name:"Arglebargle", changed_at: even_later.strftime('%Y-%m-%dT%l:%M:%S%z')},
+          {name:"Baz", changed_at: later.strftime('%Y-%m-%dT%l:%M:%S%z')},
+          {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')},
+        ]
+      )
     end
 
     it "should raise an error if the requested column does not exist" do

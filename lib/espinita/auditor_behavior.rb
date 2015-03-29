@@ -60,10 +60,13 @@ module Espinita
       raise ArgumentError, "Invalid argument. Please pass only a single column name." unless (property.is_a?(String) || property.is_a?(Symbol))
       raise ArgumentError, "The specified column does not exist or is not audited." unless self.class.permitted_columns.include?(property.to_s)
 
-      audits = self.audits.select{ |a| a.audited_changes[property].present? }
+      audits = self.audits
+        .sort_by{ |a| a.created_at }.reverse
+        .select{ |a| a.audited_changes[property].present? }
 
-      history = audits.map{ |a| [a.audited_changes[property].last, a.created_at.strftime('%Y/%m/%d')] }
-      return history
+      property_history = audits
+        .map{ |a| {property => a.audited_changes[property].last, changed_at: a.created_at.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')} }
+      return property_history
     end
 
     # audited attributes detected against permitted columns
