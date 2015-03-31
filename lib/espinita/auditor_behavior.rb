@@ -56,16 +56,23 @@ module Espinita
 
     end
 
-    def history_from_audits_for(property)
-      raise ArgumentError, "Invalid argument. Please pass only a single column name." unless (property.is_a?(String) || property.is_a?(Symbol))
-      raise ArgumentError, "The specified column does not exist or is not audited." unless self.class.permitted_columns.include?(property.to_s)
+    def history_from_audits_for(properties)
+      properties = Array(properties) unless properties.is_a?(Array)  # convert single properties to arrays [:myProp]
+      properties = properties.map{ |p| p.to_s } # for consistency, ensure that we're working with strings, not symbols
+      raise ArgumentError, "One or more of the specified columns do not exist or are not audited." if (properties - self.class.permitted_columns).any?
 
       audits = self.audits
         .sort_by{ |a| a.created_at }.reverse
-        .select{ |a| a.audited_changes[property].present? }
+        .select{ |a| properties.any?{ |p| a.audited_changes.key?(p.to_sym) } }
 
-      property_history = audits
-        .map{ |a| {property => a.audited_changes[property].last, changed_at: a.created_at.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')} }
+      property_history = audits.map do |a|
+        result = Hash.new
+        (a.audited_changes.keys.map{|k|k.to_s} & properties).each do |key|
+          result[key.to_sym] = a.audited_changes[key.to_sym].last
+        end
+        result[:changed_at] = a.created_at.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')
+        result
+      end
       return property_history
     end
 

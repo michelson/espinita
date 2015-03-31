@@ -226,7 +226,7 @@ describe GeneralModel do
       Timecop.return
     end
 
-    let(:general_model) do
+    let!(:general_model) do
       [:create, :update, :destroy].each do |c|
          GeneralModel.reset_callbacks(c)
        end
@@ -234,40 +234,81 @@ describe GeneralModel do
       FactoryGirl.create(:general_model)
     end
 
-    let(:updated_model) do
+    let!(:updated_model) do
       general_model.update_attributes(name: "Foo", audit_comment: "Some comment" )
       general_model
     end
 
-    it "should return history for a single column" do
-      later = Time.now.localtime + 10.days
-      even_later = Time.now.localtime + 1.year
+    context "given a single column as an argument" do
 
-      expect(updated_model.history_from_audits_for(:name)).to eq([
-        {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')}
-      ])
-      Timecop.freeze(later) do
-        updated_model.update_attributes(name: "Baz", audit_comment: "Some comment" )
+      it "should accept a symbol column name" do
+        expect(updated_model.history_from_audits_for(:name)).to eq([
+          {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')}
+        ])
       end
-      Timecop.freeze(even_later) do
-        updated_model.update_attributes(name: "Arglebargle", audit_comment: "Some comment" )
+
+      it "should accept a string column name" do
+        expect(updated_model.history_from_audits_for("name")).to eq([
+          {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')}
+        ])
       end
-      expect(updated_model.history_from_audits_for(:name)).to eq(
-        [
-          {name:"Arglebargle", changed_at: even_later.strftime('%Y-%m-%dT%l:%M:%S%z')},
-          {name:"Baz", changed_at: later.strftime('%Y-%m-%dT%l:%M:%S%z')},
-          {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')},
-        ]
-      )
+
+      it "should handle multiple audits" do
+        later = Time.now.localtime + 10.days
+        even_later = Time.now.localtime + 1.year
+
+        Timecop.freeze(later) do
+          updated_model.update_attributes(name: "Baz", audit_comment: "Some comment" )
+        end
+        Timecop.freeze(even_later) do
+          updated_model.update_attributes(name: "Arglebargle", audit_comment: "Some comment" )
+        end
+        expect(updated_model.history_from_audits_for(:name)).to eq(
+          [
+            {name:"Arglebargle", changed_at: even_later.strftime('%Y-%m-%dT%l:%M:%S%z')},
+            {name:"Baz", changed_at: later.strftime('%Y-%m-%dT%l:%M:%S%z')},
+            {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')},
+          ]
+        )
+      end
+    end
+
+    context "for multiple specified columns" do
+      let!(:later){ Time.now.localtime + 10.days }
+      let!(:even_later){ Time.now.localtime + 1.year }
+
+      before do
+
+        Timecop.freeze(later) do
+          updated_model.update_attributes(name: "Baz", position: 42, audit_comment: "Some comment" )
+        end
+        Timecop.freeze(even_later) do
+          updated_model.update_attributes(name: "Arglebargle", settings: "Waffles", audit_comment: "Some comment" )
+        end
+      end
+
+      it "should return history including each specified column" do
+        expect(updated_model.history_from_audits_for([:name, :settings])).to eq(
+          [
+            {name: "Arglebargle", settings: "Waffles", changed_at: even_later.strftime('%Y-%m-%dT%l:%M:%S%z')},
+            {name: "Baz", changed_at: later.strftime('%Y-%m-%dT%l:%M:%S%z')},
+            {name: "Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')},
+          ]
+        )
+        expect(updated_model.history_from_audits_for([:position, :settings])).to eq(
+          [
+            {settings: "Waffles", changed_at: even_later.strftime('%Y-%m-%dT%l:%M:%S%z')},
+            {position: 42, changed_at: later.strftime('%Y-%m-%dT%l:%M:%S%z')},
+          ]
+        )
+      end
+
     end
 
     it "should raise an error if the requested column does not exist" do
       expect{updated_model.history_from_audits_for(:waffles)}.to raise_error(ArgumentError)
     end
 
-    it "should raise an error if passed an invalid argument" do
-      expect{updated_model.history_from_audits_for([:name, :settings])}.to raise_error(ArgumentError)
-    end
   end
 
 end
