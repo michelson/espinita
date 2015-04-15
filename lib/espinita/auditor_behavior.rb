@@ -56,24 +56,46 @@ module Espinita
 
     end
 
-    def history_from_audits_for(properties)
-      properties = Array(properties) unless properties.is_a?(Array)  # convert single properties to arrays [:myProp]
-      properties = properties.map{ |p| p.to_s } # for consistency, ensure that we're working with strings, not symbols
-      raise ArgumentError, "One or more of the specified columns do not exist or are not audited." if (properties - self.class.permitted_columns).any?
+    def history_from_audits_for(attributes)
+      attributes = Array(attributes) unless attributes.is_a?(Array)  # convert single attributes to arrays [:myProp]
+      attributes = attributes.map{ |p| p.to_s } # for consistency, ensure that we're working with strings, not symbols
+      raise ArgumentError, "One or more of the specified columns do not exist or are not audited." if (attributes - self.class.permitted_columns).any?
 
       audits = self.audits
-        .sort_by{ |a| a.created_at }.reverse
-        .select{ |a| properties.any?{ |p| a.audited_changes.key?(p.to_sym) } }
+        .sort_by{ |a| a.created_at }.reverse # most recent first
+        .select{ |a| attributes.any?{ |p| a.audited_changes.key?(p.to_sym) } }
 
       property_history = audits.map do |a|
         result = Hash.new
-        (a.audited_changes.keys.map{|k|k.to_s} & properties).each do |key|
+        (a.audited_changes.keys.map{|k|k.to_s} & attributes).each do |key|
           result[key.to_sym] = a.audited_changes[key.to_sym].last
         end
         result[:changed_at] = a.created_at.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')
         result
       end
       return property_history
+    end
+
+    def restore_attributes(attributes, datetime)
+      attributes = Array(attributes) unless attributes.is_a?(Array)  # convert single attributes to arrays [:myProp]
+      attributes = attributes.map{ |p| p.to_s } # for consistency, ensure that we're working with strings, not symbols
+
+      audits = self.audits
+        .sort_by{ |a| a.created_at }.reverse
+        .select{ |a| attributes.any?{ |p| a.audited_changes.key?(p.to_sym) } }
+
+      # TODO: Catch case where there are no relevant audits
+
+      attributes.each do |attrib|
+        audits.each do |a|
+          if a.created_at < datetime
+            self.update_attribute(attrib, a.audited_changes[attrib.to_sym].last)
+            return true # successfully restored from an audit - exit now
+          end
+        end
+      end
+
+      return false
     end
 
     # audited attributes detected against permitted columns

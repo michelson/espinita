@@ -306,7 +306,84 @@ describe GeneralModel do
     end
 
     it "should raise an error if the requested column does not exist" do
-      expect{updated_model.history_from_audits_for(:waffles)}.to raise_error(ArgumentError)
+      expect{ updated_model.history_from_audits_for(:waffles) }.to raise_error(ArgumentError)
+    end
+
+  end
+
+  describe "restore" do
+
+    context "given valid arguments" do
+
+      let!(:general_model) do
+        [:create, :update, :destroy].each do |c|
+           GeneralModel.reset_callbacks(c)
+         end
+        GeneralModel.auditable on: [:update]
+        FactoryGirl.create(:general_model)
+      end
+
+      let!(:historical_model) do
+        recent = Time.now.localtime - 10.days
+        less_recent = Time.now.localtime - 50.days
+        ancient = Time.now.localtime - 1.year
+        Timecop.freeze(recent) do
+          general_model.update_attributes(name: "Baz", settings: "Waffles", position: nil, audit_comment: "Some comment" )
+        end
+        Timecop.freeze(less_recent) do
+          general_model.update_attributes(name: "Arglebargle", settings: "IHOP", audit_comment: "Some comment" )
+        end
+        Timecop.freeze(ancient) do
+          general_model.update_attributes(name: "Walrus", audit_comment: "Some comment" )
+        end
+        general_model
+      end
+
+
+      it "should restore a single property from a datetime" do
+        historical_model.restore_attributes(:name, DateTime.now - 12.days)
+        expect(historical_model.name).to eq("Arglebargle")
+      end
+
+      it "should restore multiple attributes from a datetime" do
+        historical_model.restore_attributes(:name, DateTime.now - 12.days)
+        expect(historical_model.name).to eq("Arglebargle")
+        expect(historical_model.settings).to eq("IHOP")
+      end
+
+      xit "should restore a single property that has been emptied when no datetime is specified" do
+        historical_model.restore_attributes(:name)
+        expect(historical_model.position).to eq(1)
+      end
+
+      xit "should restore a multiple attributes that have been emptied when no datetime is specified" do
+        historical_model.restore_attributes(:name, DateTime.now - 12.days)
+        expect(historical_model.position).to eq(1)
+      end
+
+    end
+
+    context "given invalid arguments" do
+      let!(:general_model) do
+        [:create, :update, :destroy].each do |c|
+           GeneralModel.reset_callbacks(c)
+         end
+        GeneralModel.auditable on: [:update]
+        FactoryGirl.create(:general_model)
+      end
+
+      let!(:historical_model) do
+        general_model.update_attributes(name: "Foo", audit_comment: "Some comment" )
+        general_model
+      end
+
+      xit "given a single property that has not been emptied and no datetime" do
+        historical_model.restore_attributes(:name, DateTime.now - 10.days)
+      end
+      xit "should raise when called with no arguments" do
+        expect{ historical_model.restore_attributes }.to raise_error(ArgumentError)
+      end
+
     end
 
   end
