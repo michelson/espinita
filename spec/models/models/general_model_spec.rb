@@ -311,14 +311,14 @@ describe GeneralModel do
 
   end
 
-  describe "restore" do
+  describe "restore_attributes!" do
 
     context "given valid arguments" do
 
       let!(:general_model) do
         [:create, :update, :destroy].each do |c|
            GeneralModel.reset_callbacks(c)
-         end
+        end
         GeneralModel.auditable on: [:update]
         FactoryGirl.create(:general_model)
       end
@@ -327,38 +327,41 @@ describe GeneralModel do
         recent = Time.now.localtime - 10.days
         less_recent = Time.now.localtime - 50.days
         ancient = Time.now.localtime - 1.year
-        Timecop.freeze(recent) do
-          general_model.update_attributes(name: "Baz", settings: "Waffles", position: nil, audit_comment: "Some comment" )
+        # these timed changes must be made in reverse chrono order to make the audits work for testing
+        Timecop.freeze(ancient) do
+          general_model.update_attributes(name: "Walrus", position: 1, audit_comment: "Some comment" )
         end
         Timecop.freeze(less_recent) do
-          general_model.update_attributes(name: "Arglebargle", settings: "IHOP", audit_comment: "Some comment" )
+          general_model.update_attributes(name: "Arglebargle", settings: "IHOP", position: 2, audit_comment: "Some comment" )
         end
-        Timecop.freeze(ancient) do
-          general_model.update_attributes(name: "Walrus", audit_comment: "Some comment" )
+        Timecop.freeze(recent) do
+          general_model.update_attributes(name: "Baz", settings: "", position: nil, audit_comment: "Some comment" )
         end
         general_model
       end
 
 
       it "should restore a single property from a datetime" do
-        historical_model.restore_attributes(:name, DateTime.now - 12.days)
+        result = historical_model.restore_attributes!(:name, DateTime.now - 12.days)
+
+        expect(result).to be(true)
         expect(historical_model.name).to eq("Arglebargle")
       end
 
       it "should restore multiple attributes from a datetime" do
-        historical_model.restore_attributes(:name, DateTime.now - 12.days)
-        expect(historical_model.name).to eq("Arglebargle")
-        expect(historical_model.settings).to eq("IHOP")
+        result = historical_model.restore_attributes!([:name, :settings], DateTime.now - 57.days)
+
+        expect(result).to be(true)
+        expect(historical_model.name).to eq("Walrus")
+        expect(historical_model.settings).to eq("MyText")
       end
 
-      xit "should restore a single property that has been emptied when no datetime is specified" do
-        historical_model.restore_attributes(:name)
-        expect(historical_model.position).to eq(1)
-      end
+      it "should return false when no restoration change is performed" do
+        original = historical_model
+        result = historical_model.restore_attributes!(:settings, DateTime.now + 5.days)
 
-      xit "should restore a multiple attributes that have been emptied when no datetime is specified" do
-        historical_model.restore_attributes(:name, DateTime.now - 12.days)
-        expect(historical_model.position).to eq(1)
+        expect(original).to match(historical_model)
+        expect(result).to be(false)
       end
 
     end
@@ -377,11 +380,8 @@ describe GeneralModel do
         general_model
       end
 
-      xit "given a single property that has not been emptied and no datetime" do
-        historical_model.restore_attributes(:name, DateTime.now - 10.days)
-      end
-      xit "should raise when called with no arguments" do
-        expect{ historical_model.restore_attributes }.to raise_error(ArgumentError)
+      it "should raise when called with no arguments" do
+        expect{ historical_model.restore_attributes! }.to raise_error(ArgumentError)
       end
 
     end

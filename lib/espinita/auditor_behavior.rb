@@ -76,26 +76,32 @@ module Espinita
       return property_history
     end
 
-    def restore_attributes(attributes, datetime)
+    def restore_attributes!(attributes, datetime)
       attributes = Array(attributes) unless attributes.is_a?(Array)  # convert single attributes to arrays [:myProp]
       attributes = attributes.map{ |p| p.to_s } # for consistency, ensure that we're working with strings, not symbols
 
-      audits = self.audits
-        .sort_by{ |a| a.created_at }.reverse
-        .select{ |a| attributes.any?{ |p| a.audited_changes.key?(p.to_sym) } }
-
-      # TODO: Catch case where there are no relevant audits
+      changes = {}
 
       attributes.each do |attrib|
+        audits = self.audits
+          .sort_by{ |a| a.created_at }.reverse
+          .select{ |a| a.audited_changes.key?(attrib.to_sym).present? }
         audits.each do |a|
           if a.created_at < datetime
-            self.update_attribute(attrib, a.audited_changes[attrib.to_sym].last)
-            return true # successfully restored from an audit - exit now
+            restore_val = a.audited_changes[attrib.to_sym].last
+            unless restore_val == self[attrib]
+              changes[attrib] = restore_val
+            end
+            break # successfully restored from an audit - exit now
           end
+        end
+        if !changes[attrib].present? && (datetime < audits.last.created_at)
+          changes[attrib] = audits.last.audited_changes[attrib.to_sym].first
         end
       end
 
-      return false
+      self.update_attributes(changes)
+      return changes.keys.count > 0
     end
 
     # audited attributes detected against permitted columns
