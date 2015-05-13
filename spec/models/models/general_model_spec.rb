@@ -217,7 +217,7 @@ describe GeneralModel do
     end
   end
 
-  describe "history_from_audits_for" do
+  context "history_from_audits_for" do
     before do
       Timecop.freeze(Time.now.localtime)
     end
@@ -225,6 +225,9 @@ describe GeneralModel do
     after do
       Timecop.return
     end
+
+    let!(:later){ Time.now.localtime + 10.days }
+    let!(:even_later){ Time.now.localtime + 1.year }
 
     let!(:general_model) do
       [:create, :update, :destroy].each do |c|
@@ -243,20 +246,17 @@ describe GeneralModel do
 
       it "should accept a symbol column name" do
         expect(updated_model.history_from_audits_for(:name)).to eq([
-          {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')}
+          {changes: {name:"Foo"}, changed_at: Time.now.localtime}
         ])
       end
 
       it "should accept a string column name" do
         expect(updated_model.history_from_audits_for("name")).to eq([
-          {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')}
+          {changes: {name:"Foo"}, changed_at: Time.now.localtime}
         ])
       end
 
       it "should handle multiple audits" do
-        later = Time.now.localtime + 10.days
-        even_later = Time.now.localtime + 1.year
-
         Timecop.freeze(later) do
           updated_model.update_attributes(name: "Baz", audit_comment: "Some comment" )
         end
@@ -265,20 +265,17 @@ describe GeneralModel do
         end
         expect(updated_model.history_from_audits_for(:name)).to eq(
           [
-            {name:"Arglebargle", changed_at: even_later.strftime('%Y-%m-%dT%l:%M:%S%z')},
-            {name:"Baz", changed_at: later.strftime('%Y-%m-%dT%l:%M:%S%z')},
-            {name:"Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')},
+            {changes: {name:"Arglebargle"}, changed_at: even_later},
+            {changes: {name:"Baz"}, changed_at: later},
+            {changes: {name:"Foo"}, changed_at: Time.now.localtime},
           ]
         )
       end
     end
 
     context "for multiple specified columns" do
-      let!(:later){ Time.now.localtime + 10.days }
-      let!(:even_later){ Time.now.localtime + 1.year }
 
       before do
-
         Timecop.freeze(later) do
           updated_model.update_attributes(name: "Baz", position: 42, audit_comment: "Some comment" )
         end
@@ -290,15 +287,15 @@ describe GeneralModel do
       it "should return history including each specified column" do
         expect(updated_model.history_from_audits_for([:name, :settings])).to eq(
           [
-            {name: "Arglebargle", settings: "Waffles", changed_at: even_later.strftime('%Y-%m-%dT%l:%M:%S%z')},
-            {name: "Baz", changed_at: later.strftime('%Y-%m-%dT%l:%M:%S%z')},
-            {name: "Foo", changed_at: Time.now.localtime.strftime('%Y-%m-%dT%l:%M:%S%z')},
+            {changes: {name: "Arglebargle", settings: "Waffles"}, changed_at: even_later},
+            {changes: {name: "Baz"}, changed_at: later},
+            {changes: {name: "Foo"}, changed_at: Time.now.localtime},
           ]
         )
         expect(updated_model.history_from_audits_for([:position, :settings])).to eq(
           [
-            {settings: "Waffles", changed_at: even_later.strftime('%Y-%m-%dT%l:%M:%S%z')},
-            {position: 42, changed_at: later.strftime('%Y-%m-%dT%l:%M:%S%z')},
+            {changes: {settings: "Waffles"}, changed_at: even_later},
+            {changes: {position: 42}, changed_at: later},
           ]
         )
       end
@@ -311,35 +308,34 @@ describe GeneralModel do
 
   end
 
-  describe "restore_attributes!" do
+  context "restore_attributes!" do
+
+    let!(:general_model) do
+      [:create, :update, :destroy].each do |c|
+        GeneralModel.reset_callbacks(c)
+      end
+      GeneralModel.auditable on: [:update]
+      FactoryGirl.create(:general_model)
+    end
+
+    let!(:historical_model) do
+      recent = Time.now.localtime - 10.days
+      less_recent = Time.now.localtime - 50.days
+      ancient = Time.now.localtime - 1.year
+      # these timed changes must be made in reverse chrono order to make the audits work for testing
+      Timecop.freeze(ancient) do
+        general_model.update_attributes(name: "Walrus", position: 1, audit_comment: "Some comment" )
+      end
+      Timecop.freeze(less_recent) do
+        general_model.update_attributes(name: "Arglebargle", settings: "IHOP", position: 2, audit_comment: "Some comment" )
+      end
+      Timecop.freeze(recent) do
+        general_model.update_attributes(name: "Baz", settings: "", position: nil, audit_comment: "Some comment" )
+      end
+      general_model
+    end
 
     context "given valid arguments" do
-
-      let!(:general_model) do
-        [:create, :update, :destroy].each do |c|
-           GeneralModel.reset_callbacks(c)
-        end
-        GeneralModel.auditable on: [:update]
-        FactoryGirl.create(:general_model)
-      end
-
-      let!(:historical_model) do
-        recent = Time.now.localtime - 10.days
-        less_recent = Time.now.localtime - 50.days
-        ancient = Time.now.localtime - 1.year
-        # these timed changes must be made in reverse chrono order to make the audits work for testing
-        Timecop.freeze(ancient) do
-          general_model.update_attributes(name: "Walrus", position: 1, audit_comment: "Some comment" )
-        end
-        Timecop.freeze(less_recent) do
-          general_model.update_attributes(name: "Arglebargle", settings: "IHOP", position: 2, audit_comment: "Some comment" )
-        end
-        Timecop.freeze(recent) do
-          general_model.update_attributes(name: "Baz", settings: "", position: nil, audit_comment: "Some comment" )
-        end
-        general_model
-      end
-
 
       it "should restore a single property from a datetime" do
         result = historical_model.restore_attributes!(:name, DateTime.now - 12.days)
@@ -367,18 +363,6 @@ describe GeneralModel do
     end
 
     context "given invalid arguments" do
-      let!(:general_model) do
-        [:create, :update, :destroy].each do |c|
-           GeneralModel.reset_callbacks(c)
-         end
-        GeneralModel.auditable on: [:update]
-        FactoryGirl.create(:general_model)
-      end
-
-      let!(:historical_model) do
-        general_model.update_attributes(name: "Foo", audit_comment: "Some comment" )
-        general_model
-      end
 
       it "should raise when called with no arguments" do
         expect{ historical_model.restore_attributes! }.to raise_error(ArgumentError)
