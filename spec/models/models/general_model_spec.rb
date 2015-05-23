@@ -372,4 +372,65 @@ describe GeneralModel do
 
   end
 
+  context "restore_to_audit" do
+
+    let!(:general_model) do
+      [:create, :update, :destroy].each do |c|
+        GeneralModel.reset_callbacks(c)
+      end
+      GeneralModel.auditable on: [:update]
+      FactoryGirl.create(:general_model)
+    end
+
+    context "given valid arguments" do
+      it "should restore when given an audit id" do
+        original_model = general_model.dup
+
+        general_model.update_attributes(name: "Ringo", settings: "Walrus")
+        general_model.update_attributes(settings: "Walrus", position: 7)
+        general_model.update_attributes(name: "Ringo", position: 3)
+        general_model.restore_to_audit(general_model.audits.first.id)
+
+        expect(general_model.name).to eq(original_model.name)
+        expect(general_model.settings).to eq(original_model.settings)
+      end
+
+      it "should restore when given an audit record" do
+        original_model = general_model.dup
+
+        general_model.update_attributes(name: "Ringo", settings: "Walrus")
+        general_model.update_attributes(settings: "Walrus", position: 7)
+        general_model.update_attributes(name: "Ringo", position: 3)
+        general_model.restore_to_audit(general_model.audits.first.id)
+
+        expect(general_model.name).to eq(original_model.name)
+        expect(general_model.settings).to eq(original_model.settings)
+      end
+    end
+
+    context "given invalid arguments" do
+
+      let!(:other_model) do
+        other_model = general_model.dup
+        other_model.save
+        other_model.update_attributes(name: "Foo", settings: "Bar")
+        other_model
+      end
+
+      it "should raise when called with a valid audit id for a different model" do
+        expect{ general_model.restore_to_audit(other_model.audits.first.id) }.to raise_error
+      end
+
+      it "should raise when called with a valid audit record for a different model" do
+        expect{ general_model.restore_to_audit(other_model.audits.first) }.to raise_error
+      end
+
+      it "should raise when called with an invalid audit id" do
+        expect{ general_model.restore_to_audit(999999999) }.to raise_error
+      end
+
+    end
+
+  end
+
 end

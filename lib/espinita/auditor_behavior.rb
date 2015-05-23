@@ -102,18 +102,14 @@ module Espinita
       return changes.keys.count > 0
     end
 
-    def relevant_audits(audits, attributes)
-      audits
-        .order('created_at DESC') # most recent first
-        .select{ |a| attributes.any?{ |p| a.audited_changes.key?(p.to_sym) } }
-    end
+    def restore_to_audit(id_or_record)
+      audit = self.audits.find(id_or_record)
 
-    def arrayify(item_or_array) # convert single attributes to arrays [:myProp]
-      if item_or_array.is_a?(Array)
-        return item_or_array
-      else
-        return Array(item_or_array)
+      audit.ancestors.each do |ancestor|
+        self.assign_attributes Hash[ancestor.audited_changes.map{ |k,v| [k,v[0]] }]
       end
+
+      self.save
     end
 
     # audited attributes detected against permitted columns
@@ -150,6 +146,22 @@ module Espinita
     def write_audit(options)
       self.audits.create(options) unless options[:audited_changes].blank?
     end
+
+    private
+
+      def arrayify(item_or_array) # convert single attributes to arrays [:myProp]
+        if item_or_array.is_a?(Array)
+          return item_or_array
+        else
+          return Array(item_or_array)
+        end
+      end
+
+      def relevant_audits(audits, attributes)
+        audits
+          .order('created_at DESC') # most recent first
+          .select{ |a| attributes.any?{ |p| a.audited_changes.key?(p.to_sym) } }
+      end
 
   end
 end
