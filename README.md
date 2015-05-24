@@ -74,3 +74,48 @@ Espinita will detect the current user when records saved from rails controllers.
 ```ruby
 Espinita.current_user_method = :authenticated_user
 ```
+
+#### History and Restoration
+If you just want a summary of changes for a particular attribute or attributes of a model, you can use the `history_from_audits_for` method.
+```ruby
+my_model.history_from_audits_for(:name)
+=> [{changes: {name: "Arglebargle"}, changed_at: 2015-05-13 15:28:22 -0700},
+{changes: {name: "Baz"}, changed_at: 2014-05-13 15:28:22 -0700},
+{changes: {name: "Foo"}, changed_at: 2013-05-13 15:28:22 -0700}]
+
+```
+
+You can also provide an array of attributes to get a single history for all of them.
+```ruby
+my_model.history_from_audits_for([:name, :settings])
+=> [{changes: {name: "Arglebargle", settings: "Waffles"}, changed_at: 2015-05-13 15:28:22 -0700},
+{changes: {name: "Baz"}, changed_at: 2014-05-13 15:28:22 -0700}]
+
+```
+
+Sometimes it's useful to roll a record back to a particular point in time, such as if it was accidentally modified. For this, the `restore_attributes!` method is provided.
+
+As with `history_from_audits_for`, this can be used with a single attribute or an array of attributes.
+```ruby
+model.name
+=> "Baz"
+model.settings
+=> ""
+
+model.history_from_audits_for([:name, :settings])
+=> [{:changes=>{:name=>"Baz", :settings=>""}, :changed_at=>2015-05-03 15:33:58 -0700},
+ {:changes=>{:name=>"Arglebargle", :settings=>"IHOP"}, :changed_at=>2015-03-24 15:33:58 -0700},
+ {:changes=>{:name=>"Walrus"}, :changed_at=>2014-05-13 15:33:58 -0700}]
+
+model.restore_attributes!([:name, :settings], DateTime.now - 57.days)
+=> true
+
+model.name
+=> "Walrus"
+model.settings
+=> "MyText"
+```
+
+The `restore_attributes!` method returns `true` if it makes a change to the model, or `false` if there is no resulting change.
+
+Note: this uses `update_attributes()` to do the rollback, so it will *skip* validations, but will trigger any callbacks that you may have in place.

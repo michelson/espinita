@@ -40,7 +40,7 @@ module Espinita
 
       end
 
-      def permited_columns
+      def permitted_columns
         self.column_names - self.excluded_cols.to_a
       end
 
@@ -56,9 +56,65 @@ module Espinita
 
     end
 
-    # audited attributes detected against permited columns
+    def history_from_audits_for(attributes)
+      attributes = arrayify(attributes)
+      attributes = attributes.map(&:to_s) # for consistency, ensure that we're working with strings, not symbols
+      raise ArgumentError, "At least one of the specified columns does not exist or is not audited." if (attributes - self.class.permitted_columns).any?
+
+      audits = relevant_audits(self.audits, attributes)
+
+      property_history = audits.map do |a|
+        {
+          changes: Hash[
+            (a.audited_changes.keys.map(&:to_s) & attributes).map do |key|
+              [key.to_sym, a.audited_changes[key.to_sym].last]
+            end
+          ],
+          changed_at: a.created_at.localtime
+        }
+      end
+      return property_history
+    end
+
+    def restore_attributes!(attributes, datetime)
+      attributes = arrayify(attributes)
+      attributes = attributes.map(&:to_s) # for consistency, ensure that we're working with strings, not symbols
+      raise ArgumentError, "At least one of the specified columns does not exist or is not audited." if (attributes - self.class.permitted_columns).any?
+
+      changes = {}
+
+      attributes.each do |attrib|
+        audits = relevant_audits(self.audits, [attrib])
+        audit = audits.select{ |a| a.created_at < datetime }.first
+
+        if audit.present? # restore to the requested point in time
+          restore_val = audit.audited_changes[attrib.to_sym].last
+        else # or fall back to the initial state of the record if the requested time predates the first audit
+          restore_val = audits.last.audited_changes[attrib.to_sym].first
+        end
+
+        unless restore_val == self[attrib]
+          changes[attrib] = restore_val
+        end
+      end
+
+      self.update_attributes(changes)
+      return changes.keys.count > 0
+    end
+
+    def restore_to_audit(id_or_record)
+      audit = self.audits.find(id_or_record)
+
+      audit.ancestors.each do |ancestor|
+        self.assign_attributes Hash[ancestor.audited_changes.map{ |k,v| [k,v[0]] }]
+      end
+
+      self.save
+    end
+
+    # audited attributes detected against permitted columns
     def audited_attributes
-      self.changes.keys & self.class.permited_columns
+      self.changes.keys & self.class.permitted_columns
     end
 
     def audited_hash
@@ -90,6 +146,22 @@ module Espinita
     def write_audit(options)
       self.audits.create(options) unless options[:audited_changes].blank?
     end
+
+    private
+
+      def arrayify(item_or_array) # convert single attributes to arrays [:myProp]
+        if item_or_array.is_a?(Array)
+          return item_or_array
+        else
+          return Array(item_or_array)
+        end
+      end
+
+      def relevant_audits(audits, attributes)
+        audits
+          .order('created_at DESC') # most recent first
+          .select{ |a| attributes.any?{ |p| a.audited_changes.key?(p.to_sym) } }
+      end
 
   end
 end
