@@ -54,6 +54,20 @@ module Espinita
         RequestStore.store[:audited_user] = nil
       end
 
+      def disable_audits!
+        @skip_audits = true
+        yield if block_given?
+      end
+
+      def enable_audits!
+        @skip_audits = false
+        yield if block_given?
+      end
+
+      def skip_audits?
+        @skip_audits
+      end
+
     end
 
     def history_from_audits_for(attributes)
@@ -144,6 +158,7 @@ module Espinita
     end
 
     def write_audit(options)
+      return if self.class.skip_audits?
       self.audits.create(options) unless options[:audited_changes].blank?
     end
 

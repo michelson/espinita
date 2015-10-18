@@ -433,4 +433,27 @@ describe GeneralModel do
 
   end
 
+  context "skip audits" do 
+    let!(:general_model) do
+      GeneralModel.disable_audits! do 
+        FactoryGirl.create(:general_model)
+      end
+    end
+
+    it "no audits on creation" do
+      expect(general_model.audits.size).to be_zero
+    end
+
+    it "no audits on update" do
+      general_model.update_attributes(name: "Ringo", settings: "Walrus")
+      expect(general_model.audits.size).to be_zero
+    end
+
+    it "audits on update when enabled" do
+      GeneralModel.enable_audits!
+      general_model.update_attributes(name: "Ringo", settings: "Walrus")
+      expect(general_model.audits.size).to_not be_zero
+    end
+  end
+
 end
