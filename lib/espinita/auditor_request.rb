@@ -2,7 +2,7 @@ module Espinita::AuditorRequest
   extend ActiveSupport::Concern
 
   included do 
-    before_filter :store_audited_user
+    before_action :store_audited_user
   end
 
   def store_audited_user
