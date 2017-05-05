@@ -1,8 +1,12 @@
 module Espinita::AuditorRequest 
   extend ActiveSupport::Concern
 
-  included do 
-    before_filter :store_audited_user
+  included do
+    if Espinita.rails51?
+      before_action :store_audited_user
+    else
+      before_filter :store_audited_user
+    end
   end
 
   def store_audited_user

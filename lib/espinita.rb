@@ -17,4 +17,8 @@ module Espinita
 
   end
 
+  def self.rails51? # :nodoc:
+    Rails.gem_version >= Gem::Version.new("5.1.x")
+  end
+
 end
