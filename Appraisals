@@ -11,3 +11,10 @@ appraise "4.1" do
   gem "shoulda", "3.5.0"
   gem "espinita", :path => "../"
 end
+
+appraise "5.1" do
+  gem 'rails', '~> 5.1.0'
+  gem 'rspec-collection_matchers'
+  gem "shoulda", "3.5.0"
+  gem "espinita", :path => "../"
+end
