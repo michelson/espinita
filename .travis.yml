@@ -12,9 +12,6 @@ gemfile:
 
 matrix:
   include:
-    - rvm: 2.1
-      gemfile:
-        - gemfiles/5.1.gemfile
-    - rvm: 2.0
+    - rvm: 2.2
       gemfile:
         - gemfiles/5.1.gemfile
