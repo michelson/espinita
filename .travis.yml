@@ -9,3 +9,9 @@ rvm:
 gemfile:
   - gemfiles/4.0.gemfile
   - gemfiles/4.1.gemfile
+
+matrix:
+  include:
+    - rvm: 2.2
+      gemfile:
+        - gemfiles/5.1.gemfile

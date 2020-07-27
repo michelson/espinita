@@ -8,6 +8,5 @@ gem "appraisal"
 gem "rails", "~> 4.0.0"
 gem "rspec-collection_matchers"
 gem "shoulda", "3.5.0"
-gem "espinita", :path=>"../"
 
 gemspec :path=>"../"

@@ -5,8 +5,9 @@ source "https://rubygems.org"
 gem "pry"
 gem "coveralls", :require=>false
 gem "appraisal"
-gem "rails", "~> 4.1.4"
+gem "rails", "~> 5.1.0"
 gem "rspec-collection_matchers"
 gem "shoulda", "3.5.0"
+gem "espinita", :path=>"../"
 
 gemspec :path=>"../"
