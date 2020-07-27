@@ -2,7 +2,7 @@ module Espinita::AuditorRequest
   extend ActiveSupport::Concern
 
   included do
-    if Espinita.rails51?
+    if Rails.version >= '5.1'
       before_action :store_audited_user
     else
       before_filter :store_audited_user
